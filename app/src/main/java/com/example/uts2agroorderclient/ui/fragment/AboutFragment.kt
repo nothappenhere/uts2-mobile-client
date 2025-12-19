@@ -35,7 +35,11 @@ class AboutFragment : Fragment() {
             Port: 3000
             
             Dikembangkan oleh:
-            [Nama & NPM Kalian]
+						• 152022166 Muhammad Rizky Akbar
+						• 152022142 Gumiwang Maysa Nusi
+						• 152022137 Baraja Barsya Pinandhita
+						• 152022169 Erick Erlangga P. W.
+						• 152022144 Luthfiansyah Putra Dean F.
             
             Terima kasih telah menggunakan AgroOrder!
         """.trimIndent()
