@@ -5,7 +5,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RajaOngkirClient {
 	private const val BASE_URL = "https://api.rajaongkir.com/"
-	private const val API_KEY = "j28uLdBYc94f2dcb5fe970cfoXDo3rrj"  // Ganti dengan API key mu!
+	private const val API_KEY = "your_api_key"  // Ganti dengan API key Anda!
 
 	val rajaOngkirService: RajaOngkirService by lazy {
 		Retrofit.Builder()

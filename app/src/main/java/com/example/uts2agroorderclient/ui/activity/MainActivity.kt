@@ -2,6 +2,8 @@ package com.example.uts2agroorderclient.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -14,6 +16,7 @@ import com.example.uts2agroorderclient.ui.fragment.ProductsFragment
 import com.example.uts2agroorderclient.util.PreferencesManager
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import androidx.appcompat.widget.Toolbar
 
 class MainActivity : AppCompatActivity() {
 	private lateinit var prefs: PreferencesManager
@@ -30,6 +33,11 @@ class MainActivity : AppCompatActivity() {
 			return
 		}
 
+		// Setup Toolbar
+		val toolbar = findViewById<Toolbar>(R.id.toolbar)
+		setSupportActionBar(toolbar)
+		supportActionBar?.title = "AgroOrder Client"
+
 		val fragments = listOf(
 			ProductsFragment(),
 			MyOrdersFragment(),
@@ -44,6 +52,27 @@ class MainActivity : AppCompatActivity() {
 		TabLayoutMediator(tabLayout, viewPager) { tab, position ->
 			tab.text = titles[position]
 		}.attach()
+	}
+
+	// Inflate menu
+	override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+		menuInflater.inflate(R.menu.menu_main, menu)
+		return true
+	}
+
+	// Handle menu item click
+	override fun onOptionsItemSelected(item: MenuItem): Boolean {
+		if (item.itemId == R.id.action_logout) {
+			logout()
+			return true
+		}
+		return super.onOptionsItemSelected(item)
+	}
+
+	private fun logout() {
+		prefs.clear()  // Hapus token
+		startActivity(Intent(this, LoginActivity::class.java))
+		finish()
 	}
 }
 

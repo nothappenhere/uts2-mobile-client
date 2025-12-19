@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.uts2agroorderclient.R
 import com.example.uts2agroorderclient.adapter.ProductAdapter
 import com.example.uts2agroorderclient.api.RajaOngkirClient
@@ -26,11 +27,15 @@ import kotlinx.coroutines.launch
 
 class ProductsFragment : Fragment() {
 	private lateinit var adapter: ProductAdapter
+	private lateinit var swipeRefresh: SwipeRefreshLayout
 
-	override fun onCreateView(
-		inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-	): View? {
+	override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 		val view = inflater.inflate(R.layout.fragment_products, container, false)
+
+		swipeRefresh = view.findViewById<SwipeRefreshLayout>(R.id.swipeRefresh)
+		swipeRefresh.setOnRefreshListener {
+			loadProducts()
+		}
 
 		adapter = ProductAdapter { product ->
 			showOrderDialog(product)
@@ -46,6 +51,8 @@ class ProductsFragment : Fragment() {
 	}
 
 	private fun loadProducts() {
+		swipeRefresh.isRefreshing = true
+
 		lifecycleScope.launch {
 			try {
 				val response = RetrofitClient.apiService.getProducts()
@@ -56,6 +63,8 @@ class ProductsFragment : Fragment() {
 				}
 			} catch (e: Exception) {
 				Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+			} finally {
+				swipeRefresh.isRefreshing = false
 			}
 		}
 	}
