@@ -1,5 +1,6 @@
 package com.example.uts2agroorderclient.adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,17 +15,18 @@ class ProductAdapter(private val onItemClick: (Product) -> Unit) :
 	ListAdapter<Product, ProductAdapter.ViewHolder>(DiffCallback()) {
 
 	class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-		val tvName: TextView = view.findViewById(R.id.tvProductName)
+		val tvName: TextView = view.findViewById(R.id.tvProduct)
 		val tvPrice: TextView = view.findViewById(R.id.tvPrice)
 		val tvUnit: TextView = view.findViewById(R.id.tvUnit)
 	}
 
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 		val view = LayoutInflater.from(parent.context)
-			.inflate(R.layout.item_product, parent, false)
+			.inflate(R.layout.item_product_client, parent, false)
 		return ViewHolder(view)
 	}
 
+	@SuppressLint("SetTextI18n")
 	override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 		val product = getItem(position)
 		holder.tvName.text = product.name

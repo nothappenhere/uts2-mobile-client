@@ -18,9 +18,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.uts2agroorderclient.R
 import com.example.uts2agroorderclient.adapter.ProductAdapter
-import com.example.uts2agroorderclient.api.RajaOngkirClient
 import com.example.uts2agroorderclient.api.RetrofitClient
 import com.example.uts2agroorderclient.model.Product
+import com.example.uts2agroorderclient.model.ShippingCostRequest
 import com.example.uts2agroorderclient.model.SubmitOrderRequest
 import com.example.uts2agroorderclient.util.PreferencesManager
 import kotlinx.coroutines.launch
@@ -86,33 +86,65 @@ class ProductsFragment : Fragment() {
 		val tvTotal = dialogView.findViewById<TextView>(R.id.tvTotal)
 		val btnSubmit = dialogView.findViewById<Button>(R.id.btnSubmit)
 
-		val clientCity = "152"  // Jakarta (ID 152), ganti sesuai kebutuhan
+		// ⚠️ TODO: Ganti hardcode ini dengan city_id dari user profile
+		// Untuk sementara gunakan Jakarta (152)
+		val clientCityId = "152"  // Jakarta
+		val originCityId = "23"   // Bandung (Petani)
 
 		// Variabel untuk simpan shipping cost terbaru
-		var currentShipping = 15000.0  // Default dummy
+		var currentShipping = 15000.0  // Default fallback
 
-		// Fungsi update UI
+		// Fungsi update UI dengan data real dari backend
 		fun updateCalculation(quantity: Int) {
-			if (quantity <= 0) return
+			if (quantity <= 0) {
+				// Reset display
+				tvSubtotal.text = "Subtotal: Rp 0"
+				tvTax.text = "Pajak (10%): Rp 0"
+				tvShipping.text = "Ongkir: Menghitung..."
+				tvTotal.text = "Total: Rp 0"
+				return
+			}
 
 			val subtotal = product.price * quantity
 			val tax = subtotal * 0.1
-			val weight = quantity * 1000
+			val weight = quantity * 1000  // Asumsi 1 item = 1kg
 
-			// Panggil RajaOngkir di coroutine
+			// ⚠️ FIX: Panggil backend endpoint (BUKAN langsung ke RajaOngkir!)
 			lifecycleScope.launch {
 				try {
-					currentShipping = RajaOngkirClient.getShippingCost("23", clientCity, weight)  // Bandung (23)
+					tvShipping.text = "Ongkir: Menghitung..."
+
+					val request = ShippingCostRequest(
+						origin = originCityId,
+						destination = clientCityId,
+						weight = weight,
+						courier = "jne"
+					)
+
+					val response = RetrofitClient.apiService.getShippingCost(request)
+
+					if (response.isSuccessful && response.body()?.isNotEmpty() == true) {
+						val results = response.body()!!
+						// Ambil service pertama (REG)
+						val firstService = results[0].costs[0]
+						currentShipping = firstService.cost[0].value.toDouble()
+
+						tvShipping.text = "Ongkir: Rp ${String.format("%,.0f", currentShipping)} (${firstService.service})"
+					} else {
+						currentShipping = 15000.0
+						tvShipping.text = "Ongkir: Rp ${String.format("%,.0f", currentShipping)} (estimasi)"
+					}
 				} catch (e: Exception) {
 					currentShipping = 15000.0
+					tvShipping.text = "Ongkir: Rp ${String.format("%,.0f", currentShipping)} (estimasi)"
+					Toast.makeText(requireContext(), "Gagal hitung ongkir: ${e.message}", Toast.LENGTH_SHORT).show()
 				}
 
+				// Update total setelah dapat shipping cost
 				val total = subtotal + tax + currentShipping
-
-				tvSubtotal.text = "Subtotal: Rp ${String.format("%.2f", subtotal)}"
-				tvTax.text = "Pajak (10%): Rp ${String.format("%.2f", tax)}"
-				tvShipping.text = "Ongkir: Rp ${String.format("%.2f", currentShipping)} (JNE)"
-				tvTotal.text = "Total: Rp ${String.format("%.2f", total)}"
+				tvSubtotal.text = "Subtotal: Rp ${String.format("%,.0f", subtotal)}"
+				tvTax.text = "Pajak (10%): Rp ${String.format("%,.0f", tax)}"
+				tvTotal.text = "Total: Rp ${String.format("%,.0f", total)}"
 			}
 		}
 
@@ -132,7 +164,7 @@ class ProductsFragment : Fragment() {
 				return@setOnClickListener
 			}
 
-			// Gunakan currentShipping terakhir
+			// Gunakan currentShipping terakhir yang sudah dihitung
 			submitOrder(product.id, quantity, currentShipping)
 			dialog.dismiss()
 		}
@@ -147,14 +179,17 @@ class ProductsFragment : Fragment() {
 		lifecycleScope.launch {
 			try {
 				val request = SubmitOrderRequest(
-					product_id = productId, quantity = quantity, shipping_cost = shipping
+					product_id = productId,
+					quantity = quantity,
+					shipping_cost = shipping
 				)
 
 				val response = RetrofitClient.apiService.submitOrder(token, request)
 				if (response.isSuccessful) {
 					Toast.makeText(requireContext(), "Order berhasil disubmit!", Toast.LENGTH_LONG).show()
 				} else {
-					Toast.makeText(requireContext(), "Gagal submit order: ${response.message()}", Toast.LENGTH_SHORT).show()
+					val errorBody = response.errorBody()?.string()
+					Toast.makeText(requireContext(), "Gagal submit order: $errorBody", Toast.LENGTH_SHORT).show()
 				}
 			} catch (e: Exception) {
 				Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
