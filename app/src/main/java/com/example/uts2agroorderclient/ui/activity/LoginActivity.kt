@@ -12,6 +12,7 @@ import com.example.uts2agroorderclient.api.RetrofitClient
 import com.example.uts2agroorderclient.util.PreferencesManager
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
 	private lateinit var prefs: PreferencesManager
@@ -21,6 +22,7 @@ class LoginActivity : AppCompatActivity() {
 		setContentView(R.layout.activity_login)
 		prefs = PreferencesManager(this)
 
+		// Check if already logged in
 		if (prefs.getToken() != null) {
 			startActivity(Intent(this, MainActivity::class.java))
 			finish()
@@ -30,7 +32,7 @@ class LoginActivity : AppCompatActivity() {
 		val etEmail = findViewById<TextInputEditText>(R.id.etEmail)
 		val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
 		val btnLogin = findViewById<Button>(R.id.btnLogin)
-		val tvRegister = findViewById<TextView>(R.id.tvRegister)  // Tambah TextView untuk link register
+		val tvRegister = findViewById<TextView>(R.id.tvRegister)
 
 		btnLogin.setOnClickListener {
 			val email = etEmail.text.toString().trim()
@@ -41,32 +43,73 @@ class LoginActivity : AppCompatActivity() {
 				return@setOnClickListener
 			}
 
+			btnLogin.isEnabled = false
+			btnLogin.text = "Loading..."
+
 			lifecycleScope.launch {
 				try {
 					val response = RetrofitClient.apiService.login(
 						mapOf("email" to email, "password" to password)
 					)
+
 					if (response.isSuccessful) {
 						val body = response.body()
+
+						// Cek role
 						if (body?.role == "CLIENT") {
 							prefs.saveToken("Bearer ${body.token}")
+							Toast.makeText(this@LoginActivity, "Login berhasil!", Toast.LENGTH_SHORT).show()
 							startActivity(Intent(this@LoginActivity, MainActivity::class.java))
 							finish()
 						} else {
-							Toast.makeText(this@LoginActivity, "Hanya client yang boleh login di app ini", Toast.LENGTH_SHORT).show()
+							Toast.makeText(
+								this@LoginActivity,
+								"Hanya client yang boleh login di app ini",
+								Toast.LENGTH_SHORT
+							).show()
 						}
 					} else {
-						Toast.makeText(this@LoginActivity, "Login gagal atau belum di-approve", Toast.LENGTH_SHORT).show()
+						// ⚠️ IMPROVED: Parse error message dari backend
+						val errorBody = response.errorBody()?.string()
+						val errorMessage = try {
+							val json = JSONObject(errorBody ?: "{}")
+							json.getString("message")
+						} catch (e: Exception) {
+							"Login gagal"
+						}
+
+						// Cek jika error karena belum di-approve
+						if (errorMessage.contains("not approved", ignoreCase = true)) {
+							Toast.makeText(
+								this@LoginActivity,
+								"⚠️ Akun Anda belum di-approve oleh admin. Silakan tunggu approval.",
+								Toast.LENGTH_LONG
+							).show()
+						} else if (errorMessage.contains("invalid credentials", ignoreCase = true)) {
+							Toast.makeText(
+								this@LoginActivity,
+								"❌ Email atau password salah",
+								Toast.LENGTH_SHORT
+							).show()
+						} else {
+							Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_SHORT).show()
+						}
 					}
 				} catch (e: Exception) {
-					Toast.makeText(this@LoginActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+					Toast.makeText(
+						this@LoginActivity,
+						"Error koneksi: ${e.message}",
+						Toast.LENGTH_LONG
+					).show()
+				} finally {
+					btnLogin.isEnabled = true
+					btnLogin.text = "Login"
 				}
 			}
 		}
 
 		tvRegister.setOnClickListener {
 			startActivity(Intent(this, RegisterActivity::class.java))
-			finish()
 		}
 	}
 }

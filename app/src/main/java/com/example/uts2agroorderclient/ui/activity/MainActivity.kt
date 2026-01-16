@@ -9,7 +9,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.example.uts2agroorderclient.R
 import com.example.uts2agroorderclient.ui.fragment.AboutFragment
-import com.example.uts2agroorderclient.ui.fragment.MyOrdersFragment
+import com.example.uts2agroorderclient.ui.fragment.OrdersFragment
 import com.example.uts2agroorderclient.ui.fragment.ProductsFragment
 import com.example.uts2agroorderclient.util.PreferencesManager
 import com.google.android.material.tabs.TabLayout
@@ -32,10 +32,10 @@ class MainActivity : AppCompatActivity() {
 
 		val fragments = listOf(
 			ProductsFragment(),
-			MyOrdersFragment(),
+			OrdersFragment(),
 			AboutFragment()
 		)
-		val titles = listOf("Products", "My Orders", "About")
+		val titles = listOf("Products", "Orders", "About")
 
 		val viewPager = findViewById<ViewPager2>(R.id.viewPager)
 		viewPager.adapter = ViewPagerAdapter(this, fragments)

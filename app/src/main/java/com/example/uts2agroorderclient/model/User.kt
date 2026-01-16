@@ -6,5 +6,6 @@ data class User(
 	val email: String,
 	val role: String,
 	val approved: Boolean,
-	val city: String?
+	val city_id: String? = null,  // ID kota dari RajaOngkir (e.g., "152" untuk Jakarta)
+	val city_name: String? = null
 )
