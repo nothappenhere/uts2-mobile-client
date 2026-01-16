@@ -40,9 +40,9 @@ AgroOrder adalah sistem pemesanan hasil tani berbasis client-admin. Aplikasi Cli
 - **RajaOngkir API** (perhitungan ongkos kirim)  
   Website: [https://rajaongkir.com](https://rajaongkir.com)  
 
-## Screenshot
-*(Tambahkan screenshot aplikasi di folder `/screenshots` dan link di sini)*
-
 ## Pengembang
-- Muhammad Rizky Akbar - NIM: 152022166
-- Gumiwang Maysa Nusi - NIM: 152022142
+- 152022166 - Muhammad Rizky Akbar
+- 152022142 - Gumiwang Maysa Nusi
+- 152022137 - Baraja Barsya P.
+- 152022169 - Erick Erlangga Putra W.
+- 152022144 - Luthfiansyah Putra Dean F.
